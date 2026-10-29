@@ -788,6 +788,7 @@ Panel {
             spacing: Style.space(2)
 
             Text {
+              textFormat: Text.PlainText
               text: "Bluetooth"
               color: Anatomy.strong
               font.family: Anatomy.sans
