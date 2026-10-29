@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.hugorolimf.bluetooth",
+  "name": "Island Bluetooth",
+  "version": "1.0.0",
+  "author": "Hugo Rolim Filho",
+  "license": "MIT",
+  "homepage": "https://github.com/hugorolimf/omarchy-island-bluetooth",
+  "description": "Bluetooth device list with connect/disconnect, in the Island look (stroke icons, anatomy panel), in English or Portuguese",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Island Bluetooth",
+    "description": "Bluetooth device list with connect/disconnect",
+    "category": "Network",
+    "allowMultiple": false
+  },
+  "omarchy": {
+    "clonedFrom": "omarchy.bluetooth"
+  }
+}
