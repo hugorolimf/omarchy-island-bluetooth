@@ -22,6 +22,9 @@ Bluetooth device list with connect and disconnect; with Island iPhone, the Tethe
 
 [Island Kit](https://github.com/hugorolimf/omarchy-island-kit): the panel is drawn with it.
 Install the Kit first, or install this panel from the Kit's catalog.
+Without the Kit, the plugin shows an "Install Island Kit" button on the bar
+(in Portuguese, "Instale o Island Kit"); clicking it installs the Kit and
+restarts the shell.
 
 ## Install
 

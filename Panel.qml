@@ -64,24 +64,6 @@ Panel {
     return "󰂯"
   }
 
-  property int phraseIndex: 0
-  readonly property var activePhrases: [
-    Strings.T("Desembaraçando fios"),
-    Strings.T("Transmitindo vikings"),
-    Strings.T("Pareando mistérios"),
-    Strings.T("Reunindo fones"),
-    Strings.T("Domando rádios"),
-    Strings.T("Convocando caixas de som"),
-    Strings.T("Laçando codecs"),
-    Strings.T("Polindo pacotes")
-  ]
-  readonly property bool rotatingPhrases: adapter && adapter.enabled
-  readonly property string heroStatusText: {
-    if (!adapter) return Strings.T("Sem adaptador")
-    if (!adapter.enabled) return Strings.T("Desligado")
-    return activePhrases[phraseIndex % activePhrases.length]
-  }
-
   // Single cursor model shared by keyboard and mouse. Sections:
   //   "connected"  — currently connected devices; Enter disconnects.
   //   "known"      — remembered devices; Enter connects.
@@ -104,12 +86,6 @@ Panel {
   // even when it is off and no device rows exist.
   readonly property bool headerHasCursor: cursorActive && focusSection === "header"
   readonly property string toggleHint: root.adapter && root.adapter.enabled ? Strings.T("Desligar o Bluetooth") : Strings.T("Ligar o Bluetooth")
-
-  // Anatomy stroke icon for the hero: slashed when off, blue once something
-  // is connected (colour only for state, as in Island Bar).
-  readonly property string heroIconPath: !adapter || !adapter.enabled
-    ? Anatomy.icons.bluetooth + Anatomy.icons.slash
-    : Anatomy.icons.bluetooth
 
   function kindIcon(kind) {
     var I = Anatomy.icons
@@ -606,39 +582,6 @@ Panel {
     onTriggered: root.switchPendingAudioOutput()
   }
 
-  Timer {
-    id: phraseTimer
-    interval: 2800
-    running: root.opened && root.rotatingPhrases
-    repeat: true
-    onTriggered: phraseSwap.restart()
-  }
-
-  SequentialAnimation {
-    id: phraseSwap
-    PropertyAnimation {
-      target: heroStatus; property: "opacity"
-      to: 0.0; duration: 180; easing.type: Easing.OutQuad
-    }
-    ScriptAction {
-      script: root.phraseIndex = (root.phraseIndex + 1) % root.activePhrases.length
-    }
-    PropertyAnimation {
-      target: heroStatus; property: "opacity"
-      to: 1.0; duration: 260; easing.type: Easing.InQuad
-    }
-  }
-
-  Connections {
-    target: root
-    function onRotatingPhrasesChanged() {
-      if (!root.rotatingPhrases) {
-        phraseSwap.stop()
-        heroStatus.opacity = 1.0
-      }
-    }
-  }
-
   // Not adapter.enabled: that writes BlueZ's Powered, which nothing persists, so
   // the adapter came back on at the next boot. omarchy-bluetooth-power moves the
   // rfkill soft block instead, which systemd-rfkill restores across reboots.
@@ -709,6 +652,11 @@ Panel {
     }
   }
 
+  // the panel's height follows its content smoothly while open (devices
+  // connecting, found or forgotten)
+  property real panelHeight: column.implicitHeight
+  Behavior on panelHeight { enabled: root.opened; NumberAnimation { duration: 280; easing.type: Easing.Bezier; easing.bezierCurve: Anatomy.ease } }
+
   KeyboardPanel {
     id: panel
     anchorItem: button
@@ -717,7 +665,7 @@ Panel {
     open: root.opened
     focusTarget: keyCatcher
     contentWidth: panel.fittedContentWidth(Style.space(380))
-    contentHeight: panel.fittedContentHeight(column.implicitHeight)
+    contentHeight: panel.fittedContentHeight(root.panelHeight)
 
     PanelKeyCatcher {
       id: keyCatcher
@@ -740,77 +688,32 @@ Panel {
         anchors.fill: parent
         spacing: Style.space(14)
 
-        // ---------- Hero: Bluetooth icon · status ----------
-        Item {
+        // ---------- Hero: Bluetooth on or off, said in words ----------
+        // The whole row is the switch (and the header's cursor target).
+        // Off, a slash draws across the rune; connected, it turns blue and
+        // the line names the device.
+        StateHero {
+          id: heroRow
+          readonly property bool on: !!root.adapter && root.adapter.enabled
+          readonly property int linked: root.connectedDevices.length
           width: parent.width
-          implicitHeight: Math.max(heroIcon.implicitHeight, heroLabels.implicitHeight, powerSwitch.implicitHeight)
-
-          // Status only — the switch owns toggling, mouse and keyboard alike.
-          AnatomyIcon {
-            id: heroIcon
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-            path: root.heroIconPath
-            size: Style.font.display
-            strokeWidth: 1.3
-            color: !root.adapter || !root.adapter.enabled ? Anatomy.mid
-              : root.connectedDevices.length > 0 ? Anatomy.blue
-              : Anatomy.hi
-          }
-
-          // Compact on/off switch on the trailing edge of the hero, and the
-          // header's only cursor target.
-          ToggleSwitch {
-            id: powerSwitch
-            visible: !!root.adapter
-            checked: !!root.adapter && root.adapter.enabled
-            hasCursor: root.headerHasCursor
-            foreground: root.bar.foreground
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            onHovered: function(on) { if (on) root.setHeaderCursor() }
-            onToggled: root.toggleBluetooth()
-
-            PanelToolTip {
-              visible: powerSwitch.containsMouse
-              text: root.toggleHint
-              fontFamily: Anatomy.sans
-            }
-          }
-
-          Column {
-            id: heroLabels
-            anchors.left: heroIcon.right
-            anchors.leftMargin: Style.space(14)
-            anchors.right: parent.right
-            anchors.rightMargin: powerSwitch.visible ? powerSwitch.width + Style.space(12) : 0
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: Style.space(2)
-
-            Text {
-              textFormat: Text.PlainText
-              text: "Bluetooth"
-              color: Anatomy.strong
-              font.family: Anatomy.sans
-              font.pixelSize: Style.font.title
-              font.weight: Font.DemiBold
-              elide: Text.ElideRight
-              width: parent.width
-            }
-
-            Text {
-              id: heroStatus
-              textFormat: Text.PlainText
-              text: root.heroStatusText.toUpperCase()
-              color: Anatomy.muted
-              font.family: Anatomy.mono
-              font.pixelSize: Style.font.caption
-              font.weight: Font.DemiBold
-              font.letterSpacing: Anatomy.labelSpacing
-              elide: Text.ElideRight
-              width: parent.width
-            }
-          }
+          title: "Bluetooth"
+          stateText: !root.adapter ? Strings.T("SEM ADAPTADOR") : on ? Strings.T("LIGADO") : Strings.T("DESLIGADO")
+          detail: !root.adapter ? Strings.T("Nenhum rádio Bluetooth encontrado.")
+            : !on ? Strings.T("O rádio está desligado; nenhum aparelho se conecta.")
+            : linked > 0 ? Strings.T("Conectado a ") + (root.deviceLabel(root.connectedDevices[0]) || Strings.T("Aparelho"))
+                + (linked > 1 ? Strings.T(" e mais ") + (linked - 1) : "") + "."
+            : root.adapter.discovering ? Strings.T("Ligado, procurando aparelhos por perto…")
+            : Strings.T("Ligado, sem aparelhos conectados.")
+          tooltip: root.toggleHint
+          iconPath: Anatomy.icons.bluetooth
+          iconColor: !on ? Anatomy.mid : linked > 0 ? Anatomy.blue : Anatomy.hi
+          marked: !on
+          checked: on
+          switchVisible: !!root.adapter
+          hasCursor: root.headerHasCursor
+          onHovered: function(isHovered) { if (isHovered) root.setHeaderCursor() }
+          onToggled: root.toggleBluetooth()
         }
 
         // Scrollable device list — capped so a noisy neighborhood doesn't

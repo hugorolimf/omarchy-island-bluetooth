@@ -32,7 +32,16 @@ var en = {
  "Conectado": "Connected",
  "Bateria ": "Battery ",
  "Fechar ajustes do iPhone": "Close iPhone settings",
- "Ajustes do iPhone (Tether)": "iPhone settings (Tether)"
+ "Ajustes do iPhone (Tether)": "iPhone settings (Tether)",
+ "SEM ADAPTADOR": "NO ADAPTER",
+ "LIGADO": "ON",
+ "DESLIGADO": "OFF",
+ "Nenhum rádio Bluetooth encontrado.": "No Bluetooth radio found.",
+ "O rádio está desligado; nenhum aparelho se conecta.": "The radio is off; no device can connect.",
+ "Conectado a ": "Connected to ",
+ " e mais ": " and ",
+ "Ligado, procurando aparelhos por perto…": "On, looking for devices nearby…",
+ "Ligado, sem aparelhos conectados.": "On, nothing connected."
 }
 
 function T(s) { return english && en[s] !== undefined ? en[s] : s }
