@@ -18,6 +18,15 @@ Bluetooth device list with connect and disconnect; with Island iPhone, the Tethe
 - 🔄 **Drop-in.** It's Omarchy's own `omarchy.bluetooth` underneath (same behaviour, same
   shortcuts and IPC): enabling it takes the original's place on the bar.
 
+## See it
+
+Recorded on a real desktop, mouse and clicks included. The panel follows the
+system language; this take is in Portuguese.
+
+**Devices**: what's connected and what's known; with [Island iPhone](https://github.com/hugorolimf/omarchy-island-iphone), your iPhone's row unfolds into its Tether settings.
+
+![Bluetooth devices](assets/bluetooth.gif)
+
 ## Requirements
 
 [Island Kit](https://github.com/hugorolimf/omarchy-island-kit): the panel is drawn with it.
